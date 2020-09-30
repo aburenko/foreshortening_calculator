@@ -6,19 +6,12 @@ void main() {
   test('create LineModel with a viewer point of 90 angle and test points', () {
     var lineModel = new LineModel(3, 90);
 
-    Vector3 point1 = new Vector3(1, 1, 0);
-    Vector3 point2 = new Vector3(0, 0, 0);
+    Vector3 point1 = new Vector3(1.5, 0, 0);
+    Vector3 point2 = new Vector3(0.5, 0, 0);
     expect(
         (lineModel.getAngleBetweenPoints(point1, point2) * radians2Degrees)
             .floor(),
-        90);
-
-    point1 = new Vector3(1.5, 0, 0);
-    point2 = new Vector3(0.5, 0, 0);
-    expect(
-        (lineModel.getAngleBetweenPoints(point1, point2) * radians2Degrees)
-            .floor(),
-        33);
+        29);
   });
 
   test('create LineModel and run with 4 grids viewer point of 90 angle', () {

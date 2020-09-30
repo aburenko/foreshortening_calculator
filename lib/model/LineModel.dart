@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:foreshortening_calculator/model/Model.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -30,5 +31,28 @@ class LineModel extends Model {
       print("angles $angles");
     }
     return angles;
+  }
+}
+
+class LineModelWidget extends StatefulWidget {
+  @override
+  _LineModelWidgetState createState() => _LineModelWidgetState();
+}
+
+class _LineModelWidgetState extends State<LineModelWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return new MaterialApp(
+      home: new Scaffold(
+        body: Center(
+          child: Column(
+            children: [
+              new Image(image: AssetImage('assets/LineModel.jpg')),
+              new Text("abc"),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
