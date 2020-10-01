@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:foreshortening_calculator/model/LineModel.dart';
 import 'package:vector_math/vector_math.dart';
 
+import 'SquareModel.dart';
+
 final List<String> allModelNames = <String>[
   'LineModel',
   'One More',
@@ -16,7 +18,6 @@ class Model {
   Vector3 viewerPoint;
 
   Model(int viewerAngle, {int distance = 1}) {
-    print("Model");
     double radians = viewerAngle.toDouble() * degrees2Radians;
     double x = distance * cos(radians);
     double y = distance * sin(radians);
@@ -24,13 +25,10 @@ class Model {
       x = 0;
     }
     viewerPoint = new Vector3(x, y, 0);
-    print("radians $radians viewerPoint is $viewerPoint");
   }
 
   List<double> getDistanceRatios() {
-    print("getDistanceRatios");
     List<double> distanceAngles = getDistanceAngles();
-    print("distanceAngles $distanceAngles");
     List<double> anglesRatios = new List(distanceAngles.length);
     double sumOfAngles = distanceAngles.fold(
         0, (previousValue, element) => previousValue + element);
@@ -41,19 +39,15 @@ class Model {
   }
 
   List<double> getDistanceAngles() {
-    print("getDistanceAngles UnimplementedError");
     throw UnimplementedError();
   }
 
   double getAngleBetweenPoints(Vector3 point1, Vector3 point2) {
-    print("getAngleBetweenPoints");
     Vector3 a = point1 + viewerPoint;
     Vector3 b = point2 + viewerPoint;
-    print("angle between $point1 $point2 and respectively $a $b ");
     double n = a.length * b.length;
     double dot = dot3(a, b);
     double angleInRadians = acos(dot / n);
-    print("n $n dot $dot angleInRadians $angleInRadians");
     return angleInRadians;
   }
 }
@@ -83,16 +77,21 @@ class _ModelWidgetState extends State<ModelWidget> {
   }
 }
 
-enum ModelsEnum { lineModel, squareModel }
+enum ModelsEnum { lineModel, middleLineModel, squareModel }
 
 class ModelFactory {
+  static var lineModelWidget = LineModelWidget(false);
+  static var middleLineModel = LineModelWidget(true);
+  static var squareModel = SquareModelWidget();
+
   static StatefulWidget model(ModelsEnum model) {
     switch (model) {
       case ModelsEnum.lineModel:
-        return LineModelWidget();
+        return lineModelWidget;
+      case ModelsEnum.middleLineModel:
+        return middleLineModel;
       case ModelsEnum.squareModel:
-        // TODO enter square model
-        return LineModelWidget();
+        return squareModel;
       default:
         throw new UnimplementedError();
     }
@@ -102,6 +101,8 @@ class ModelFactory {
     switch (model) {
       case ModelsEnum.lineModel:
         return "Line Model";
+      case ModelsEnum.middleLineModel:
+        return "Line Model (Viewer at the Middle)";
       case ModelsEnum.squareModel:
         return "Square Model";
       default:
