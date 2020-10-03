@@ -7,8 +7,9 @@ class LineModel extends Model {
   List<Vector3> linePoints;
   // create line with center in 0, 0, 0
   // length will be 1 per grid
-  LineModel(int gridNumber, int viewerAngle, bool isMiddle)
-      : super(viewerAngle) {
+  LineModel(
+      int gridNumber, int viewerAngle, bool isMiddle, int distanceToObject)
+      : super(viewerAngle, distance: distanceToObject) {
     linePoints = List.filled(gridNumber + 1, Vector3.zero());
     double lineStaringX = -gridNumber.toDouble() / 2;
     if (!isMiddle) {
@@ -74,8 +75,9 @@ class _LineModelWidgetState extends State<LineModelWidget> {
     if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
       return;
     }
+    // TODO replace viewer distance with field
     var ratiosString =
-        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle)
+        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle, 10)
             .getRepresentation();
     var distances = ratiosString
         .map((e) =>

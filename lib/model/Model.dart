@@ -7,17 +7,10 @@ import 'package:vector_math/vector_math.dart';
 
 import 'SquareModel.dart';
 
-final List<String> allModelNames = <String>[
-  'LineModel',
-  'One More',
-  'Another',
-  "This one"
-];
-
 abstract class Model {
   Vector3 viewerPoint;
 
-  Model(int viewerAngle, {int distance = 1}) {
+  Model(int viewerAngle, {int distance = 5}) {
     double radians = viewerAngle.toDouble() * degrees2Radians;
     double x = distance * cos(radians);
     double z = distance * sin(radians);
@@ -25,6 +18,7 @@ abstract class Model {
       x = 0;
     }
     viewerPoint = new Vector3(x, 0, z);
+    print("$viewerPoint");
   }
 
   getRepresentation();

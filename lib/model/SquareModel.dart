@@ -11,29 +11,55 @@ class SquareModel extends Model {
   List<Vector3> linePointsMiddle;
   Vector3 middlePoint;
 
-  SquareModel(int gridNumber, int viewerAngle) : super(viewerAngle) {
+  SquareModel(int gridNumber, int viewerAngle, int distanceToObject)
+      : super(viewerAngle, distance: distanceToObject) {
     linePointsFront = List.filled(gridNumber + 1, Vector3.zero());
     linePointsBack = List.filled(gridNumber + 1, Vector3.zero());
     linePointsMiddle = List.filled(gridNumber + 1, Vector3.zero());
     // x is length of current diagonal
     for (double x = 0; x < linePointsFront.length; ++x) {
-      var lengthOfGridSide = x / sqrt2;
-      linePointsFront[x.toInt()] =
-          new Vector3(lengthOfGridSide, lengthOfGridSide, 0);
-      linePointsBack[x.toInt()] = linePointsFront[x.toInt()] +
-          new Vector3(gridNumber - x, gridNumber - x, 0);
-      linePointsMiddle[x.toInt()] = new Vector3(x, x, 0);
+      linePointsFront[x.toInt()] = new Vector3(x * 0.5, x * 0.5, 0);
+      linePointsBack[linePointsFront.length - x.toInt() - 1] =
+          linePointsFront[x.toInt()] +
+              new Vector3(gridNumber - x, gridNumber - x, 0);
+      //linePointsBack = linePointsBack.reversed;
+      linePointsMiddle[x.toInt()] = new Vector3(x, 0, 0);
     }
 
+    print("front ${linePointsFront.toString()}");
+    print("back ${linePointsBack.toString()}");
+    print("middle ${linePointsMiddle.toString()}");
     middlePoint = new Vector3(gridNumber / 2, 0, 0);
   }
 
   SquareModelRepresentation getRepresentation() {
+    var distanceAnglesFront = getDistanceAngles(linePointsFront);
+    var distanceAnglesBack = getDistanceAngles(linePointsBack);
+    var distanceAnglesMiddle = getDistanceAngles(linePointsMiddle);
+    print("front ${distanceAnglesFront.toString()}");
+    print("back ${distanceAnglesBack.toString()}");
+    print("middle ${distanceAnglesMiddle.toString()}");
+
+    var lengthFront =
+        distanceAnglesFront.reduce((value, element) => value + element);
+    var lengthBack =
+        distanceAnglesBack.reduce((value, element) => value + element);
+    var lengthMiddle =
+        distanceAnglesMiddle.reduce((value, element) => value + element);
+    print("front $lengthFront");
+    print("back $lengthBack");
+    print("middle $lengthMiddle");
+
     return new SquareModelRepresentation(
         getDistanceRatios(linePointsFront),
         getDistanceRatios(linePointsBack),
         getDistanceRatios(linePointsMiddle),
-        0);
+        (acos((pow(lengthFront, 2) +
+                        pow(lengthMiddle, 2) -
+                        pow(lengthBack, 2)) /
+                    (2 * lengthFront * lengthMiddle)) *
+                radians2Degrees)
+            .toStringAsFixed(1));
   }
 }
 
@@ -41,7 +67,7 @@ class SquareModelRepresentation {
   final List<double> lineRatiosFront;
   final List<double> lineRatiosBack;
   final List<double> lineRatiosMiddle;
-  final double angleBetweenMiddleAndFront;
+  final String angleBetweenMiddleAndFront;
 
   SquareModelRepresentation(this.lineRatiosFront, this.lineRatiosBack,
       this.lineRatiosMiddle, this.angleBetweenMiddleAndFront);
@@ -67,7 +93,7 @@ class _SquareModelWidgetState extends State<SquareModelWidget> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              new Image(image: AssetImage('assets/MiddleLineModel.jpeg')),
+              new Image(image: AssetImage('assets/SquareModel.jpg')),
               _buildTextField("Alpha: Viewer Angle", widget._tecAlpha),
               _buildTextField("Number of Grids", widget._tecGrids),
               _buildTextField(
@@ -75,7 +101,7 @@ class _SquareModelWidgetState extends State<SquareModelWidget> {
                   isDecimal: true),
               new TextField(
                 decoration: new InputDecoration(
-                    labelText: "foreshortened length of grids in cm"),
+                    labelText: "angle between middle and front lines"),
                 controller: widget._tecModelResult,
                 style: new TextStyle(fontSize: 24),
                 maxLines: null,
@@ -95,11 +121,13 @@ class _SquareModelWidgetState extends State<SquareModelWidget> {
     if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
       return;
     }
+    // TODO add distance
     var squareRepresentation =
-        new SquareModel(int.parse(grids), int.parse(alpha)).getRepresentation();
+        new SquareModel(int.parse(grids), int.parse(alpha), 10)
+            .getRepresentation();
     setState(() {
       widget._tecModelResult.text =
-          squareRepresentation.angleBetweenMiddleAndFront.toString();
+          squareRepresentation.angleBetweenMiddleAndFront;
     });
   }
 
