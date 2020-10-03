@@ -14,21 +14,47 @@ final List<String> allModelNames = <String>[
   "This one"
 ];
 
-class Model {
+abstract class Model {
   Vector3 viewerPoint;
 
   Model(int viewerAngle, {int distance = 1}) {
     double radians = viewerAngle.toDouble() * degrees2Radians;
     double x = distance * cos(radians);
-    double y = distance * sin(radians);
+    double z = distance * sin(radians);
     if (viewerAngle == 90) {
       x = 0;
     }
-    viewerPoint = new Vector3(x, y, 0);
+    viewerPoint = new Vector3(x, 0, z);
   }
 
-  List<double> getDistanceRatios() {
-    List<double> distanceAngles = getDistanceAngles();
+  getRepresentation();
+
+  double getAngleBetweenPoints(Vector3 point1, Vector3 point2) {
+    return getAngleBetweenPointsWithViewer(viewerPoint, point1, point2);
+  }
+
+  double getAngleBetweenPointsWithViewer(
+      Vector3 viewer, Vector3 point1, Vector3 point2) {
+    Vector3 a = point1 + viewer;
+    Vector3 b = point2 + viewer;
+    double n = a.length * b.length;
+    double dot = dot3(a, b);
+    double angleInRadians = acos(dot / n);
+    return angleInRadians;
+  }
+
+  List<double> getDistanceAngles(List<Vector3> linePoints) {
+    List<double> angles = new List(linePoints.length - 1);
+    for (var i = 0; i < linePoints.length - 1; ++i) {
+      var point1 = linePoints[i];
+      var point2 = linePoints[i + 1];
+      angles[i] = getAngleBetweenPoints(point1, point2);
+    }
+    return angles;
+  }
+
+  List<double> getDistanceRatios(List<Vector3> linePoints) {
+    List<double> distanceAngles = getDistanceAngles(linePoints);
     List<double> anglesRatios = new List(distanceAngles.length);
     double sumOfAngles = distanceAngles.fold(
         0, (previousValue, element) => previousValue + element);
@@ -36,19 +62,6 @@ class Model {
       anglesRatios[i] = distanceAngles[i] / sumOfAngles;
     }
     return anglesRatios;
-  }
-
-  List<double> getDistanceAngles() {
-    throw UnimplementedError();
-  }
-
-  double getAngleBetweenPoints(Vector3 point1, Vector3 point2) {
-    Vector3 a = point1 + viewerPoint;
-    Vector3 b = point2 + viewerPoint;
-    double n = a.length * b.length;
-    double dot = dot3(a, b);
-    double angleInRadians = acos(dot / n);
-    return angleInRadians;
   }
 }
 

@@ -16,7 +16,7 @@ void main() {
 
   test('create LineModel and run with 4 grids viewer point of 90 angle', () {
     var lineModel = new LineModel(3, 90, false);
-    var distanceRatios = lineModel.getDistanceRatios();
+    var distanceRatios = lineModel.getRepresentation();
     expect(distanceRatios.length, 3);
     print(distanceRatios);
   });

@@ -10,25 +10,17 @@ class LineModel extends Model {
   LineModel(int gridNumber, int viewerAngle, bool isMiddle)
       : super(viewerAngle) {
     linePoints = List.filled(gridNumber + 1, Vector3.zero());
-    double gridNumberHalf = -gridNumber.toDouble() / 2;
+    double lineStaringX = -gridNumber.toDouble() / 2;
     if (!isMiddle) {
-      gridNumberHalf = 0;
+      lineStaringX = 0;
     }
-    int creationIterator = 0;
     for (var i = 0; i < linePoints.length; ++i) {
-      linePoints[i] = new Vector3(gridNumberHalf + creationIterator++, 0, 0);
+      linePoints[i] = new Vector3(lineStaringX + i, 0, 0);
     }
   }
 
-  @override
-  List<double> getDistanceAngles() {
-    List<double> angles = new List(linePoints.length - 1);
-    for (var i = 0; i < linePoints.length - 1; ++i) {
-      var point1 = linePoints[i];
-      var point2 = linePoints[i + 1];
-      angles[i] = getAngleBetweenPoints(point1, point2);
-    }
-    return angles;
+  List<double> getRepresentation() {
+    return getDistanceRatios(linePoints);
   }
 }
 
@@ -75,6 +67,31 @@ class _LineModelWidgetState extends State<LineModelWidget> {
     );
   }
 
+  void _updateTecModelResult() {
+    var grids = widget._tecGrids.value.text.toString();
+    var alpha = widget._tecAlpha.value.text.toString();
+    var lengthOfOneGrid = widget._tecLengthOfGrid.value.text.toString();
+    if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
+      return;
+    }
+    var ratiosString =
+        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle)
+            .getRepresentation();
+    var distances = ratiosString
+        .map((e) =>
+            (e.toDouble() * double.parse(lengthOfOneGrid)).toStringAsFixed(2))
+        .toList();
+    setState(() {
+      widget._tecModelResult.text = distances.toString();
+    });
+  }
+
+  Widget _buildImage(bool isMiddle) {
+    return isMiddle
+        ? new Image(image: AssetImage('assets/MiddleLineModel.jpeg'))
+        : new Image(image: AssetImage('assets/LineModel.jpg'));
+  }
+
   Widget _buildTextField(String name, TextEditingController tec,
       {bool isDecimal = false}) {
     return new TextField(
@@ -89,31 +106,5 @@ class _LineModelWidgetState extends State<LineModelWidget> {
       ], // Only numbers can be entered
       onChanged: (String e) => {_updateTecModelResult()},
     );
-  }
-
-  void _updateTecModelResult() {
-    var grids = widget._tecGrids.value.text.toString();
-    var alpha = widget._tecAlpha.value.text.toString();
-    var lengthOfOneGrid = widget._tecLengthOfGrid.value.text.toString();
-    if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
-      return;
-    }
-    var parse = int.parse(grids);
-    var ratiosString =
-        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle)
-            .getDistanceRatios();
-    var distances = ratiosString
-        .map((e) =>
-            (e.toDouble() * double.parse(lengthOfOneGrid)).toStringAsFixed(2))
-        .toList();
-    setState(() {
-      widget._tecModelResult.text = distances.toString();
-    });
-  }
-
-  Widget _buildImage(bool isMiddle) {
-    return isMiddle
-        ? new Image(image: AssetImage('assets/MiddleLineModel.jpeg'))
-        : new Image(image: AssetImage('assets/LineModel.jpg'));
   }
 }
