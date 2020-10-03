@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart' as m;
 import 'package:foreshortening_calculator/model/Model.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -10,11 +10,17 @@ class LineModel extends Model {
   LineModel(
       int gridNumber, int viewerAngle, bool isMiddle, int distanceToObject)
       : super(viewerAngle, distance: distanceToObject) {
+    _constructedLinePoints(-gridNumber.toDouble() / 2, gridNumber);
+  }
+
+  LineModel.middle(int gridNumber, int viewerAngle, int distanceToObject)
+      : super(viewerAngle, distance: distanceToObject) {
     linePoints = List.filled(gridNumber + 1, Vector3.zero());
-    double lineStaringX = -gridNumber.toDouble() / 2;
-    if (!isMiddle) {
-      lineStaringX = 0;
-    }
+    _constructedLinePoints(0, gridNumber);
+  }
+
+  void _constructedLinePoints(double lineStaringX, int gridNumber) {
+    linePoints = List.filled(gridNumber + 1, Vector3.zero());
     for (var i = 0; i < linePoints.length; ++i) {
       linePoints[i] = new Vector3(lineStaringX + i, 0, 0);
     }
@@ -48,18 +54,41 @@ class _LineModelWidgetState extends State<LineModelWidget> {
           child: Column(
             children: [
               _buildImage(widget._isMiddle),
-              _buildTextField("Alpha: Viewer Angle", widget._tecAlpha),
-              _buildTextField("Number of Grids", widget._tecGrids),
-              _buildTextField(
-                  "Length of one grid in cm", widget._tecLengthOfGrid,
-                  isDecimal: true),
-              new TextField(
-                decoration: new InputDecoration(
-                    labelText: "foreshortened length of grids in cm"),
-                controller: widget._tecModelResult,
-                style: new TextStyle(fontSize: 24),
-                maxLines: null,
-                enabled: false,
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildInputWidget(widget._tecGrids, widget._tecAlpha,
+                        widget._tecLengthOfGrid, _updateModel),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
+                      child: new Text("Results",
+                          style: new TextStyle(fontSize: 25)),
+                    ),
+                    Material(
+                      color: m.Colors.white,
+                      elevation: 14.0,
+                      borderRadius: BorderRadius.circular(10.0),
+                      shadowColor: m.Colors.black26,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            new TextField(
+                              decoration: new InputDecoration(
+                                  labelText: "foreshortened length of grids"),
+                              controller: widget._tecModelResult,
+                              style: new TextStyle(fontSize: 24),
+                              maxLines: null,
+                              enabled: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -68,45 +97,28 @@ class _LineModelWidgetState extends State<LineModelWidget> {
     );
   }
 
-  void _updateTecModelResult() {
-    var grids = widget._tecGrids.value.text.toString();
-    var alpha = widget._tecAlpha.value.text.toString();
-    var lengthOfOneGrid = widget._tecLengthOfGrid.value.text.toString();
-    if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
-      return;
-    }
-    // TODO replace viewer distance with field
-    var ratiosString =
-        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle, 10)
-            .getRepresentation();
-    var distances = ratiosString
-        .map((e) =>
-            (e.toDouble() * double.parse(lengthOfOneGrid)).toStringAsFixed(2))
-        .toList();
-    setState(() {
-      widget._tecModelResult.text = distances.toString();
-    });
-  }
-
   Widget _buildImage(bool isMiddle) {
     return isMiddle
         ? new Image(image: AssetImage('assets/MiddleLineModel.jpeg'))
         : new Image(image: AssetImage('assets/LineModel.jpg'));
   }
 
-  Widget _buildTextField(String name, TextEditingController tec,
-      {bool isDecimal = false}) {
-    return new TextField(
-      decoration: new InputDecoration(labelText: name),
-      controller: tec,
-      keyboardType: TextInputType
-          .number, //TextInputType.numberWithOptions(decimal: isDecimal),
-      inputFormatters: <TextInputFormatter>[
-        isDecimal
-            ? FilteringTextInputFormatter.singleLineFormatter
-            : FilteringTextInputFormatter.digitsOnly
-      ], // Only numbers can be entered
-      onChanged: (String e) => {_updateTecModelResult()},
-    );
+  void _updateModel() {
+    var grids = widget._tecGrids.value.text.toString();
+    var alpha = widget._tecAlpha.value.text.toString();
+    var lengthOfOneGrid = widget._tecLengthOfGrid.value.text.toString();
+    if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
+      return;
+    }
+    var ratiosString =
+        new LineModel(int.parse(grids), int.parse(alpha), widget._isMiddle, 10)
+            .getRepresentation();
+    var distances = ratiosString
+        .map((e) =>
+            (e.toDouble() * double.parse(lengthOfOneGrid)).toStringAsFixed(2))
+        .join(", ");
+    setState(() {
+      widget._tecModelResult.text = distances.toString();
+    });
   }
 }
