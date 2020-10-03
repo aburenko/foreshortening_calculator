@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart' as m;
 import 'package:foreshortening_calculator/model/Model.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -78,7 +78,11 @@ class SquareModelWidget extends StatefulWidget {
   TextEditingController _tecAlpha = new TextEditingController();
   TextEditingController _tecGrids = new TextEditingController();
   TextEditingController _tecLengthOfGrid = new TextEditingController();
-  TextEditingController _tecModelResult = new TextEditingController();
+
+  TextEditingController _tecAngleResult = new TextEditingController();
+  TextEditingController _tecFrontResult = new TextEditingController();
+  TextEditingController _tecBackResult = new TextEditingController();
+  TextEditingController _tecMiddleResult = new TextEditingController();
 
   @override
   _SquareModelWidgetState createState() => _SquareModelWidgetState();
@@ -94,18 +98,42 @@ class _SquareModelWidgetState extends State<SquareModelWidget> {
           child: Column(
             children: [
               new Image(image: AssetImage('assets/SquareModel.jpg')),
-              _buildTextField("Alpha: Viewer Angle", widget._tecAlpha),
-              _buildTextField("Number of Grids", widget._tecGrids),
-              _buildTextField(
-                  "Length of one grid in cm", widget._tecLengthOfGrid,
-                  isDecimal: true),
-              new TextField(
-                decoration: new InputDecoration(
-                    labelText: "angle between middle and front lines"),
-                controller: widget._tecModelResult,
-                style: new TextStyle(fontSize: 24),
-                maxLines: null,
-                enabled: false,
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildInputWidget(widget._tecGrids, widget._tecAlpha,
+                        widget._tecLengthOfGrid, _updateModel),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
+                      child: new Text("Results",
+                          style: new TextStyle(fontSize: 25)),
+                    ),
+                    Material(
+                      color: m.Colors.white,
+                      elevation: 14.0,
+                      borderRadius: BorderRadius.circular(10.0),
+                      shadowColor: m.Colors.black26,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            buildResultTextField(
+                                "angle b/w middle and front line",
+                                widget._tecAngleResult),
+                            buildResultTextField(
+                                "front line", widget._tecFrontResult),
+                            buildResultTextField(
+                                "middle line", widget._tecMiddleResult),
+                            buildResultTextField(
+                                "back line", widget._tecBackResult),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -114,36 +142,28 @@ class _SquareModelWidgetState extends State<SquareModelWidget> {
     );
   }
 
-  void _updateTecModelResult() {
+  void _updateModel() {
     var grids = widget._tecGrids.value.text.toString();
     var alpha = widget._tecAlpha.value.text.toString();
     var lengthOfOneGrid = widget._tecLengthOfGrid.value.text.toString();
     if (grids.isEmpty || alpha.isEmpty || lengthOfOneGrid.isEmpty) {
       return;
     }
-    // TODO add distance
-    var squareRepresentation =
-        new SquareModel(int.parse(grids), int.parse(alpha), 10)
-            .getRepresentation();
+    var representation = new SquareModel(int.parse(grids), int.parse(alpha), 10)
+        .getRepresentation();
+    double gridLen = double.parse(lengthOfOneGrid);
     setState(() {
-      widget._tecModelResult.text =
-          squareRepresentation.angleBetweenMiddleAndFront;
+      widget._tecAngleResult.text = representation.angleBetweenMiddleAndFront;
+      widget._tecFrontResult.text =
+          fromList(representation.lineRatiosFront, gridLen);
+      widget._tecMiddleResult.text =
+          fromList(representation.lineRatiosMiddle, gridLen);
+      widget._tecBackResult.text =
+          fromList(representation.lineRatiosBack, gridLen);
     });
   }
 
-  Widget _buildTextField(String name, TextEditingController tec,
-      {bool isDecimal = false}) {
-    return new TextField(
-      decoration: new InputDecoration(labelText: name),
-      controller: tec,
-      keyboardType: TextInputType
-          .number, //TextInputType.numberWithOptions(decimal: isDecimal),
-      inputFormatters: <TextInputFormatter>[
-        isDecimal
-            ? FilteringTextInputFormatter.singleLineFormatter
-            : FilteringTextInputFormatter.digitsOnly
-      ], // Only numbers can be entered
-      onChanged: (String e) => {_updateTecModelResult()},
-    );
+  String fromList(List<double> list, double gridLen) {
+    return list.map((e) => (e * gridLen).toStringAsFixed(3)).join(", ");
   }
 }

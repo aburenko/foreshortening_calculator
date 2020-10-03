@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as m;
+import 'package:flutter/services.dart';
 import 'package:foreshortening_calculator/model/LineModel.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -57,6 +59,10 @@ abstract class Model {
     }
     return anglesRatios;
   }
+}
+
+abstract class ModelRepresentation {
+  String toString();
 }
 
 class ModelWidget extends StatefulWidget {
@@ -116,4 +122,54 @@ class ModelFactory {
         throw new UnimplementedError();
     }
   }
+}
+
+Widget buildInputWidget(
+    TextEditingController _tecGrids,
+    TextEditingController _tecAlpha,
+    TextEditingController _tecLengthOfGrid,
+    Function f) {
+  return Material(
+    color: m.Colors.white,
+    elevation: 14.0,
+    borderRadius: BorderRadius.circular(10.0),
+    shadowColor: m.Colors.black26,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          buildTextField("Alpha: Viewer Angle", _tecAlpha, f),
+          buildTextField("Number of Grids", _tecGrids, f),
+          buildTextField("Length of one grid", _tecLengthOfGrid, f,
+              isDecimal: true),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget buildTextField(String name, TextEditingController used, Function f,
+    {bool isDecimal = false}) {
+  return new TextField(
+    decoration: new InputDecoration(labelText: name),
+    controller: used,
+    keyboardType: TextInputType
+        .number, //TextInputType.numberWithOptions(decimal: isDecimal),
+    inputFormatters: <TextInputFormatter>[
+      isDecimal
+          ? FilteringTextInputFormatter.singleLineFormatter
+          : FilteringTextInputFormatter.digitsOnly
+    ], // Only numbers can be entered
+    onChanged: (String e) => {f()},
+  );
+}
+
+Widget buildResultTextField(String label, TextEditingController tec) {
+  return new TextField(
+    decoration: new InputDecoration(labelText: label),
+    controller: tec,
+    style: new TextStyle(fontSize: 24),
+    maxLines: null,
+    enabled: false,
+  );
 }
